@@ -4,11 +4,15 @@
 # **Part 1.1**: In this part you will implement variation of Dijkstra’s algorithm. It is a popular shortest path algorithm where the current known shortest path to each node is updated once new path is identified. This updating is called relaxing and in a graph with 𝑛 nodes it can occur at most 𝑛 − 1 times. In this part implement a function dijkstra (graph, source, k) which takes the graph and source as an input and where
 # each node can be relaxed on only k times where, 0 < 𝑘 < 𝑁 − 1. This function returns a distance and path dictionary which maps a node (which is an integer) to the distance and the path (sequence of nodes).
 
-# In[1]:
+# In[32]:
 
 
 import random
 import matplotlib.pyplot as plt
+import time
+import sys
+import psutil
+import timeit
 
 
 # In[2]:
@@ -180,7 +184,7 @@ print(paths)
 
 # **Part 1.2**: Consider the same restriction as previous and implement a variation of Bellman Ford’s algorithm. This means implement a function bellman_ford(graph, source, k) which take the graph and source as an input and finds the path where each node can be relaxed only k times, where, 0 < 𝑘 < 𝑁 − 1. This function also returns a distance and path dictionary which maps a node (which is an integer) to the distance and the path (sequence of nodes).
 
-# In[21]:
+# In[7]:
 
 
 def bf(g, source, k): 
@@ -220,7 +224,7 @@ def bf(g, source, k):
     return dist, relax_count, paths
 
 
-# In[22]:
+# In[8]:
 
 
 g1 = DWG() 
@@ -242,7 +246,7 @@ print(paths)
 print(relax_count)
 
 
-# In[26]:
+# In[9]:
 
 
 # handle negative cycles, return infinity
@@ -279,7 +283,7 @@ else:
 
 # **Part 1.3**: Design an experiment to analyze the performance of functions written in Part 1.1 and 1.2. You should consider factors like graph size, graph density and value of k, that impact the algorithm performance in terms of its accuracy, time and space complexity.
 
-# The proposed experiment will examine how many relaxations per node (k values) are needed to acquire a shortest path for both algorithms for both a graph. By comparing the number of relaxations per node for Dijkstra's and Bellman-Ford's variations, we can assess which algorithm performs better in terms of efficiency. We do this by measuring the **average** increase ratio; specifically, the increase ratio for each node represents the ratio between the distance computed by the algorithm and the actual shortest distance between two nodes in the graph. An increase ratio closer to 1.0  indicates that the algorithm produces paths closer to the actual shortest path, while a higher increase ratio suggests that the algorithm's paths deviate further from the true shortest path. Furthermore, an algorithm which converges to 1 faster as we increase the k value (i.e. max number of relaxations/node) is a more efficient algorithm in finding the shortest path.
+# The first experiment will examine how many relaxations per node (k values) are needed to acquire a shortest path for both algorithms for both a graph. By comparing the number of relaxations per node for Dijkstra's and Bellman-Ford's variations, we can assess which algorithm performs better in terms of efficiency. We do this by measuring the **average** increase ratio; specifically, the increase ratio for each node represents the ratio between the distance computed by the algorithm and the actual shortest distance between two nodes in the graph. An increase ratio closer to 1.0  indicates that the algorithm produces paths closer to the actual shortest path, while a higher increase ratio suggests that the algorithm's paths deviate further from the true shortest path. Furthermore, an algorithm which converges to 1 faster as we increase the k value (i.e. max number of relaxations/node) is a more efficient algorithm in finding the shortest path.
 
 # First, we will create a function to find the shortest path of a large graph without relaxation limits (i.e. using Dijkstra's algorithm with no relaxation limits). Then, we run the experiment with a graph that has 80 nodes, n(n-1) edges for full graph density for a weighted digraph. We increase the max number of relaxations per node (k) for both algorithms until the average increase ratio for both algorithms converge to 1 (i.e., both algorithms have achieved the true shortest path). 
 
@@ -318,7 +322,7 @@ def dijkstra_nolimit(g, source):
     return dist
 
 
-# In[82]:
+# In[11]:
 
 
 def generate_graph(graph, nodes, edges, max_weight): 
@@ -405,3 +409,167 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+
+# The second experiment will measure the time complexity of Dijkstra and Bellman-Ford's algorithms. The relaxation limit to infinity for both algorithms; essentially, they have no relaxation limit. In addition, the experiment will iterate over a list of increasing node sizes, starting from 10 nodes to 300, with a proportional number of edges on each run for a full density graph, i.e. n(n-1) edges. 
+
+# In[18]:
+
+
+def measure_time_complexity(algorithm, nodes_list, max_weight, num_runs):
+    results = []
+    for nodes in node_sizes:
+        edges = nodes * (nodes - 1)  
+        execution_times = []
+        graph = DWG()
+        generate_graph(graph, nodes, edges, max_weight)
+        for _ in range(num_runs):
+            source_node = 0
+            start_time = time.time()
+            algorithm(graph, source_node, k)
+            execution_time = time.time() - start_time
+            execution_times.append(execution_time)
+        average_execution_time = sum(execution_times) / num_runs
+        results.append((nodes, average_execution_time))
+    return results
+
+node_sizes = [10, 50, 100, 200, 300] 
+max_weight = 10 # max weight for edges
+num_runs = 3 # number of runs for each size 
+k = float('inf') # infinite relaxation steps 
+
+dijkstra_results = measure_time_complexity(dijkstra, node_sizes, max_weight, num_runs)
+bf_results = measure_time_complexity(bf, node_sizes, max_weight, num_runs)
+# Plot results
+plt.figure(figsize=(10, 6))
+plt.title("Time Complexity of Dijkstra's and Bellman-Ford Algorithms")
+plt.xlabel("Number of Nodes")
+plt.ylabel("Execution Time (seconds)")
+
+x = [result[0] for result in dijkstra_results]  # Number of nodes
+y_dijkstra = [result[1] for result in dijkstra_results]  # Execution time for Dijkstra's algorithm
+y_bellman_ford = [result[1] for result in bf_results]  # Execution time for Bellman-Ford algorithm
+
+plt.plot(x, y_dijkstra, label="Dijkstra's Algorithm")
+plt.plot(x, y_bellman_ford, label="Bellman-Ford Algorithm")
+
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+# As we can observe, Dijkstra's algorithm is better when it comes to reducing the time complexity as the number of nodes increases. 
+
+# The third experiment compares the space complexity of Dijkstra and Bellman Ford algorithms. The graph sizes range from 10 to 500 nodes, with steps of 10. For each graph size, random graphs are generated with a number of edges proportional to the size of the graph. Both algorithms are then applied to each generated graph, with a relaxation limit k set to infinity; i.e., no relaxation limit to achieve the shortest path. The space complexities of both algorithms are measured by considering the memory consumption of various data structures used during their execution, including dictionaries, lists, and priority queues. 
+
+# In[39]:
+
+
+def space_complexity_dijkstra(graph, source, k):
+    paths = {source: [source]} 
+    dist = {} 
+    nodes = list(graph.adj.keys())
+    relax_count = {} 
+        
+    Q = MinHeap([])
+    
+    for i in graph.adj.keys(): 
+        relax_count[i] = 0 
+        
+    for node in nodes:
+        Q.insert(Item(node, float("inf")))
+        dist[node] = float("inf")
+        
+    Q.decrease_key(source, 0)
+    
+    space_used = sys.getsizeof(paths) + sys.getsizeof(dist) + sys.getsizeof(nodes) + sys.getsizeof(relax_count) + sys.getsizeof(Q.heap)
+    
+    while not Q.is_empty(): 
+        current_element = Q.extract_min() 
+        current_node = current_element.value
+        dist[current_node] = current_element.key 
+        for neighbour in graph.adj[current_node]:
+            if dist[current_node] + graph.w(current_node, neighbour) < dist[neighbour] and relax_count[neighbour] < k:
+                Q.decrease_key(neighbour, dist[current_node] + graph.w(current_node, neighbour))
+                dist[neighbour] = dist[current_node] + graph.w(current_node, neighbour)
+                paths[neighbour] = paths.get(current_node, []) + [neighbour]
+                relax_count[neighbour] += 1 
+                space_used += sys.getsizeof(neighbour)
+                
+    return space_used
+
+
+def space_complexity_bellman_ford(graph, source, k):
+    paths = {source: [source]} 
+    dist = {} 
+    nodes = list(graph.adj.keys())
+    relax_count = {} 
+    
+    for i in graph.adj.keys(): 
+        relax_count[i] = 0 
+    
+    for node in nodes: 
+        dist[node] = float("inf")
+        
+    dist[source] = 0 
+    
+    space_used = sys.getsizeof(paths) + sys.getsizeof(dist) + sys.getsizeof(nodes) + sys.getsizeof(relax_count)
+    
+    for _ in range(graph.num_nodes() - 1):
+        for node in nodes: 
+            for neighbour in graph.adj[node]: 
+                if relax_count[neighbour] < k and dist[neighbour] > dist[node] + graph.w(node,neighbour):
+                    dist[neighbour] = dist[node] + graph.w(node,neighbour) 
+                    paths[neighbour] = paths.get(node, []) + [neighbour]
+                    relax_count[neighbour] += 1
+                    space_used += sys.getsizeof(neighbour)
+                    
+    for node in nodes:
+        for neighbour in graph.adj[node]:
+            if relax_count[neighbour] < k and dist[neighbour] > dist[node] + graph.w(node, neighbour):
+                return float('inf')  # negative cycle detected, return infinity
+                                        
+    return space_used
+
+def average_space_complexity_dijkstra(graph, source, k, iterations):
+    total_space = 0
+    for _ in range(iterations):
+        space_used = space_complexity_dijkstra(graph, source, k)
+        total_space += space_used
+    return total_space / iterations
+
+def average_space_complexity_bellman_ford(graph, source, k, iterations):
+    total_space = 0
+    for _ in range(iterations):
+        space_used = space_complexity_bellman_ford(graph, source, k)
+        total_space += space_used
+    return total_space / iterations
+
+graph_sizes = list(range(10, 501, 10))  
+k = float('inf') 
+iterations = 3 
+
+dijkstra_space_complexities = []
+bellman_ford_space_complexities = []
+
+for size in graph_sizes:
+    graph = DWG()
+    generate_graph(graph, size, size*2, 10)  # Generate a random graph
+    source_node = random.randint(0, graph.num_nodes() - 1)
+    
+    dijkstra_space = average_space_complexity_dijkstra(graph, source_node, k, iterations)
+    bellman_ford_space = average_space_complexity_bellman_ford(graph, source_node, k, iterations)
+    
+    dijkstra_space_complexities.append(dijkstra_space)
+    bellman_ford_space_complexities.append(bellman_ford_space)
+
+plt.plot(graph_sizes, dijkstra_space_complexities, label="Dijkstra")
+plt.plot(graph_sizes, bellman_ford_space_complexities, label="Bellman-Ford")
+plt.xlabel('Graph Size')
+plt.ylabel('Space Complexity (Bytes)')
+plt.title('Comparison of Space Complexity: Dijkstra vs Bellman-Ford')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+# Results show that the space complexities for both algorithms have negligible difference, i.e. they have similar space complexities. This lines up with theoretical expectations wherein the space complexity for Dijkstra's and Bellman Ford are both O(e), with e being the number of edges. Although not following a linear pattern, they line up with theoretical expectations in the way that they both have similar time complexities. A potential reason for this deviation from a linear pattern is that both algorithms require auxiliary data structures to store intermediate results and manage algorithmic operations. These data structures, such as dictionaries for storing distances and paths, may contribute to the overall space complexity. The utilization of these data structures in the algorithm can affect the memory usage and hence the practical, observed space complexities.
