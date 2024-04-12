@@ -17,7 +17,7 @@
 # between source and the given station.
 # 
 
-# In[1]:
+# In[2]:
 
 
 import math
@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# In[2]:
+# In[3]:
 
 
 class Item:
@@ -193,7 +193,7 @@ class MinHeap:
         return s
 
 
-# In[3]:
+# In[4]:
 
 
 class MinHeap2:
@@ -252,7 +252,7 @@ class MinHeap2:
         return len(self.heap) == 0
 
 
-# In[4]:
+# In[5]:
 
 
 class DirectedWeightedGraph:
@@ -311,7 +311,7 @@ class DirectedWeightedGraph:
         return result
 
 
-# In[5]:
+# In[6]:
 
 
 def dijkstra(graph, start, end):
@@ -345,7 +345,7 @@ def dijkstra(graph, start, end):
     return distance[end], path
 
 
-# In[6]:
+# In[7]:
 
 
 import math
@@ -389,7 +389,7 @@ def A_star(graph, source, destination, h):
         return cameFrom, shortestpath
 
 
-# In[7]:
+# In[8]:
 
 
 def heuristic(source, destination):
@@ -402,7 +402,7 @@ def heuristic(source, destination):
     return euclidean_distance(latit1, longit1, latit2, longit2)
 
 
-# In[8]:
+# In[9]:
 
 
 import csv
@@ -417,7 +417,7 @@ with open('london_stations.csv', newline='') as csvfile:
         disinfo.append(row[0:3])
 
 
-# In[9]:
+# In[10]:
 
 
 import csv
@@ -432,7 +432,7 @@ with open('london_connections.csv', newline='') as csvfile:
         stinfo.append(row[0: 3])   
 
 
-# In[10]:
+# In[11]:
 
 
 def euclidean_distance(lat1, lon1, lat2, lon2):
@@ -465,7 +465,7 @@ for st in stinfo:
 fsubway = sorted(subway, key=lambda x: x[0])
 
 
-# In[11]:
+# In[12]:
 
 
 #Creating a graph using the london subway data
@@ -629,7 +629,7 @@ def compute_time_for_sameline(graph):
     return dijkstra1, a_star
 
 # Plot a comparison graph
-def plot_comparison_graph(dijkstra_times, a_star_times):
+def plot_comparison_graph0(dijkstra_times, a_star_times):
     plt.plot(a_star_times, label = "A-star")
     plt.plot(dijkstra_times, label='Dijkstra')
     plt.xlabel('Pair of Stations')
@@ -641,10 +641,10 @@ def plot_comparison_graph(dijkstra_times, a_star_times):
 
 # Main code
 dijkstra_time, a_star_time = compute_time_for_sameline(graph5)
-plot_comparison_graph(dijkstra_time, a_star_time)
+plot_comparison_graph0(dijkstra_time, a_star_time)
 
 
-# In[17]:
+# In[14]:
 
 
 #finding several connnection pairs
@@ -675,7 +675,7 @@ several = find_several_stations(graph1)
 #print(several)
 
 
-# In[18]:
+# In[15]:
 
 
 def compute_time_for_several(graph):
@@ -721,7 +721,7 @@ def plot_comparison_graph1(dijkstra_times, a_star_times):
     plt.plot(dijkstra_times, label='Dijkstra')
     plt.xlabel('Pair of Stations')
     plt.ylabel('Time Taken (seconds)')
-    plt.title('Comparison of Dijkstra vs A* for stations having several connections')
+    plt.title('Comparison of Dijkstra vs A* for stations having several transfers')
     plt.ylim(-0.00025, 0.0020)
     plt.legend()
     plt.show()
